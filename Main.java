@@ -1,3 +1,4 @@
+import java.time.Duration;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -104,13 +105,23 @@ public class Main {
         String licensePlate = sc.next();
 
         if (parkedCars.contains(licensePlate)) {
+            LocalDateTime entryTime = parkedTimeMap.get(licensePlate);
+            LocalDateTime exitTime = LocalDateTime.now();
+            Duration duration = Duration.between(entryTime, exitTime);
+            long hours = duration.toHours();
+
+            double parkingFee = hours * 5.0; // $5 per hour
+
+            System.out.println("Car removed successfully.");
+            System.out.println("Parking fee for " + hours + " hours: $" + parkingFee);
+
             parkedCars.remove(licensePlate);
             String category = carCategoryMap.get(licensePlate);
             carCategoryMap.remove(licensePlate);
             parkedTimeMap.remove(licensePlate);
             availableSlots++;
 
-            System.out.println("Car removed successfully. Available slots: " + availableSlots);
+            System.out.println("Available slots: " + availableSlots);
         } else {
             System.out.println("The car is not parked here.");
         }
