@@ -1,3 +1,6 @@
+import java.io.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -8,8 +11,11 @@ public class Main {
     static int availableSlots = totalSlots;
     static ArrayList<String> parkedCars = new ArrayList<>();
     static HashMap<String, String> carCategoryMap = new HashMap<>();
+    static HashMap<String, LocalDateTime> parkedTimeMap = new HashMap<>();
+    static final String FILENAME = "parked_cars.txt";
 
     public static void main(String[] args) {
+        loadParkedCars(); // Load parked cars data from file when the program starts
 
         Scanner sc = new Scanner(System.in);
 
@@ -40,6 +46,7 @@ public class Main {
                     generateReport();
                     break;
                 case 6:
+                    saveParkedCars(); // Save parked cars data to file when the program exits
                     System.exit(0);
                 default:
                     System.out.println("Invalid choice. Please try again.");
@@ -52,11 +59,11 @@ public class Main {
             System.out.println("Sorry, there are no available parking slots.");
             return;
         }
-    
+
         Scanner sc = new Scanner(System.in);
         System.out.println("Enter the license plate number of the car:");
         String licensePlate = sc.next();
-        
+
         System.out.println("Enter the category of the car:");
         System.out.println("1. Compact");
         System.out.println("2. Sedan");
@@ -77,14 +84,14 @@ public class Main {
                 category = "Unknown";
                 break;
         }
-    
+
         parkedCars.add(licensePlate);
         carCategoryMap.put(licensePlate, category);
+        parkedTimeMap.put(licensePlate, LocalDateTime.now());
         availableSlots--;
-    
+
         System.out.println("Car parked successfully. Available slots: " + availableSlots);
     }
-    
 
     public static void removeCar() {
         if (availableSlots == totalSlots) {
@@ -100,6 +107,7 @@ public class Main {
             parkedCars.remove(licensePlate);
             String category = carCategoryMap.get(licensePlate);
             carCategoryMap.remove(licensePlate);
+            parkedTimeMap.remove(licensePlate);
             availableSlots++;
 
             System.out.println("Car removed successfully. Available slots: " + availableSlots);
@@ -116,7 +124,7 @@ public class Main {
 
         System.out.println("Parked cars:");
         for (String licensePlate : parkedCars) {
-            System.out.println("License Plate: " + licensePlate + ", Category: " + carCategoryMap.get(licensePlate));
+            System.out.println("License Plate: " + licensePlate + ", Category: " + carCategoryMap.get(licensePlate) + ", Parked Time: " + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         }
     }
 
@@ -125,7 +133,54 @@ public class Main {
     }
 
     public static void generateReport() {
-        System.out.println("Generating parking entries report...");
-        // Implement report generation logic here
+        System.out.println("***** Parking Entries Report *****");
+        System.out.println("Total Parking Slots: " + totalSlots);
+        System.out.println("Available Parking Slots: " + availableSlots);
+        System.out.println("---------- Parked Cars ----------");
+        if (parkedCars.isEmpty()) {
+            System.out.println("No cars parked.");
+        } else {
+            for (String licensePlate : parkedCars) {
+                System.out.println("License Plate: " + licensePlate + ", Category: " + carCategoryMap.get(licensePlate) + ", Parked Time: " + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            }
+        }
+        System.out.println("*********************************");
     }
+
+    public static void saveParkedCars() {
+        try (PrintWriter writer = new PrintWriter(FILENAME)) {
+            for (String licensePlate : parkedCars) {
+                writer.println(licensePlate + "," + carCategoryMap.get(licensePlate) + "," + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void loadParkedCars() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILENAME))) {
+            String line;
+            int loadedCars = 0; // Initialize counter for loaded cars
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length == 3) {
+                    String licensePlate = parts[0];
+                    String category = parts[1];
+                    LocalDateTime parkedTime = LocalDateTime.parse(parts[2], DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    parkedCars.add(licensePlate);
+                    carCategoryMap.put(licensePlate, category);
+                    parkedTimeMap.put(licensePlate, parkedTime);
+                    loadedCars++; // Increment loaded cars counter
+                } else {
+                    System.out.println("Invalid data format: " + line);
+                }
+            }
+            // Update availableSlots based on loaded cars
+            availableSlots = totalSlots - loadedCars;
+        } catch (IOException e) {
+            System.err.println("Error loading parked cars: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
 }
