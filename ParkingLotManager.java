@@ -135,7 +135,10 @@ public class ParkingLotManager {
     public static void saveParkedCars() {
         try (PrintWriter writer = new PrintWriter(FILENAME)) {
             for (String licensePlate : parkedCars) {
-                writer.println(licensePlate + "," + carCategoryMap.get(licensePlate) + "," + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                writer.println(licensePlate + "," 
+                + carCategoryMap.get(licensePlate) 
+                + "," + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                + "," + getCurrentSpace(parkedCars.indexOf(licensePlate)));
             }
         } catch (IOException e) {
             e.printStackTrace();
