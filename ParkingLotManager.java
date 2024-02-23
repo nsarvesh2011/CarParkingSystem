@@ -17,7 +17,7 @@ public class ParkingLotManager {
     private static HashMap<String, LocalDateTime> parkedTimeMap = new HashMap<>();
     static final String FILENAME = "parked_cars.txt";
 
-    private static final HashMap<Character, Boolean> parkingSpaces = new HashMap<>();
+    private static HashMap<Character, Boolean> parkingSpaces = new HashMap<>();
     static {
         // Initialize parking spaces as available
         for (char space = 'A'; space <= 'J'; space++) {
@@ -106,7 +106,10 @@ public class ParkingLotManager {
 
         System.out.println("Parked cars:");
         for (String licensePlate : parkedCars) {
-            System.out.println("License Plate: " + licensePlate + ", Category: " + carCategoryMap.get(licensePlate) + ", Parked Time: " + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            System.out.println("License Plate: " + licensePlate 
+                            + ", Category: " + carCategoryMap.get(licensePlate) 
+                            + ", Parked Time: " + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                            + ", Parking Space: " + getCurrentSpace(parkedCars.indexOf(licensePlate)));
         }
     }
 
@@ -145,13 +148,16 @@ public class ParkingLotManager {
             int loadedCars = 0; // Initialize counter for loaded cars
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
-                if (parts.length == 3) {
+                if (parts.length == 4) {
                     String licensePlate = parts[0];
                     String category = parts[1];
                     LocalDateTime parkedTime = LocalDateTime.parse(parts[2], DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    String spaceStr = parts[3];
+                    char space = spaceStr.charAt(0);
                     parkedCars.add(licensePlate);
                     carCategoryMap.put(licensePlate, category);
                     parkedTimeMap.put(licensePlate, parkedTime);
+                    parkingSpaces.put(space, false);
                     loadedCars++; // Increment loaded cars counter
                 } else {
                     System.out.println("Invalid data format: " + line);
