@@ -55,6 +55,7 @@ public class ParkingLotManager {
         availableSlots--;
 
         System.out.println("Car parked successfully. Available slots: " + availableSlots);
+        sc.close();
     }
 
     public static void removeCar() {
@@ -88,6 +89,7 @@ public class ParkingLotManager {
         } else {
             System.out.println("The car is not parked here.");
         }
+        sc.close();
     }
 
     public static void viewParkedCars() {
