@@ -164,5 +164,47 @@ public class ParkingLotManager {
             e.printStackTrace();
         }
     }
+    private static char getFirstAvailableSpace() {
+        for (HashMap.Entry<Character, Boolean> entry : parkingSpaces.entrySet()) {
+            char space = entry.getKey();
+            boolean value = entry.getValue();
+
+            // Check the value and perform actions accordingly
+            if (value) {
+                System.out.println("Space: " + space + " is now " + !value);
+                parkingSpaces.put(space, false); // make space as unavailable
+                return space;
+            }
+        }
+        return '0'; // No available space found
+    }
+
+    private static char getCurrentSpace(int parkingSpaceTracker) {
+        int count = 0;
+        for (HashMap.Entry<Character, Boolean> entry : parkingSpaces.entrySet()) {
+            char space = entry.getKey();
+            // Check the value and perform actions accordingly
+            if (parkingSpaceTracker == count) {
+                return space;
+            }
+            count++;
+        }
+        return '0'; // No available space found
+    }
+
+    private static void freeParkingSpace(int parkingSpaceTracker){
+        int count = 0;
+        for (HashMap.Entry<Character, Boolean> entry : parkingSpaces.entrySet()) {
+            char space = entry.getKey();
+            boolean value = entry.getValue();
+
+            // Check the value and perform actions accordingly
+            if (parkingSpaceTracker == count && !value) {
+                parkingSpaces.put(space, true); // make space as available
+                System.out.println("Space: " + space + " is now " + value);
+            }
+            count++;
+        }
+    }
     
 }
