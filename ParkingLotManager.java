@@ -17,6 +17,14 @@ public class ParkingLotManager {
     private static HashMap<String, LocalDateTime> parkedTimeMap = new HashMap<>();
     static final String FILENAME = "parked_cars.txt";
 
+    private static final HashMap<Character, Boolean> parkingSpaces = new HashMap<>();
+    static {
+        // Initialize parking spaces as available
+        for (char space = 'A'; space <= 'J'; space++) {
+            parkingSpaces.put(space, true);
+        }
+    }
+
     // Add all the parking lot management functions here...
     public static void parkCar() {
         if (availableSlots == 0) {
