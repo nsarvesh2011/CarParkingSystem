@@ -21,26 +21,30 @@ public class Main {
             System.out.println("3. View parked cars");
             System.out.println("4. Check parking availability");
             System.out.println("5. Generate parking entries report");
-            System.out.println("6. Exit");
+            System.out.println("6. Reserve Parking");
+            System.out.println("7. Exit");
             int choice = sc.nextInt();
 
             switch (choice) {
                 case 1:
-                ParkingLotManager.parkCar();
+                    ParkingLotManager.parkCar();
                     break;
                 case 2:
-                ParkingLotManager.removeCar();
+                    ParkingLotManager.removeCar();
                     break;
                 case 3:
-                ParkingLotManager.viewParkedCars();
+                    ParkingLotManager.viewParkedCars();
                     break;
                 case 4:
-                ParkingLotManager.checkAvailability();
+                    ParkingLotManager.checkAvailability();
                     break;
                 case 5:
-                ParkingLotManager.generateReport();
+                    ParkingLotManager.generateReport();
                     break;
                 case 6:
+                    ParkingLotManager.reserveParking();
+                    break;    
+                case 7:
                 ParkingLotManager.saveParkedCars(); // Save parked cars data to file when the program exits
                     System.exit(0);
                 default:
