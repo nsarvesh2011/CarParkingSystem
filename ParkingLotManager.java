@@ -195,52 +195,5 @@ public class ParkingLotManager {
         }
         return '0'; // No available space found
     }
-
-    private static void updateOccupiedSpaces(String licencePlate) {
-        for (HashMap.Entry<Character, Boolean> entry : parkingSpaces.entrySet()) {
-            char space = entry.getKey();
-            boolean value = entry.getValue();
-
-            // Check the value and perform actions accordingly
-            if (value) {
-                occupiedSpaces.put(licencePlate, space); // make space as unavailable
-            }
-            else{
-                occupiedSpaces.put(licencePlate, '_');
-            }
-        }
-    }
-
-    private static char readCurrentSpace(String licensePlate) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(FILENAME))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length == 4 && parts[1] == licensePlate) {
-                    String spaceStr = parts[3];
-                   return spaceStr.charAt(0);
-                }
-            }
-        }catch (IOException e) {
-            System.err.println("Error loading current space: " + e.getMessage());
-            e.printStackTrace();
-        }
-        return '0'; // No available space found
-    }
-
-    private static void freeParkingSpace(int parkingSpaceTracker){
-        int count = 0;
-        for (HashMap.Entry<Character, Boolean> entry : parkingSpaces.entrySet()) {
-            char space = entry.getKey();
-            boolean value = entry.getValue();
-
-            // Check the value and perform actions accordingly
-            if (parkingSpaceTracker == count && !value) {
-                parkingSpaces.put(space, true); // make space as available
-                System.out.println("Space: " + space + " is now " + value);
-            }
-            count++;
-        }
-    }
     
 }
