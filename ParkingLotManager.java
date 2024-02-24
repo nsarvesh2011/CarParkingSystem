@@ -133,7 +133,10 @@ public class ParkingLotManager {
             System.out.println("No cars parked.");
         } else {
             for (String licensePlate : parkedCars) {
-                System.out.println("License Plate: " + licensePlate + ", Category: " + carCategoryMap.get(licensePlate) + ", Parked Time: " + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                System.out.println("License Plate: " + licensePlate 
+                + ", Category: " + carCategoryMap.get(licensePlate) 
+                + ", Parked Time: " + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                + ", Parked Space: " + occupiedSpaces.get(licensePlate));
             }
         }
         System.out.println("*********************************");
