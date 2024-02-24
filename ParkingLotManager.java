@@ -18,6 +18,8 @@ public class ParkingLotManager {
     static final String FILENAME = "parked_cars.txt";
 
     private static HashMap<Character, Boolean> parkingSpaces = new HashMap<>();
+    private static HashMap<String, Character> occupiedSpaces = new HashMap<>();
+
     static {
         // Initialize parking spaces as available
         for (char space = 'A'; space <= 'J'; space++) {
@@ -58,6 +60,8 @@ public class ParkingLotManager {
         }
 
         parkedCars.add(licensePlate);
+        char parkSpace = getFirstAvailableSpace();
+        occupiedSpaces.put(licensePlate, parkSpace);
         carCategoryMap.put(licensePlate, category);
         parkedTimeMap.put(licensePlate, LocalDateTime.now());
         availableSlots--;
@@ -86,10 +90,13 @@ public class ParkingLotManager {
             System.out.println("Car removed successfully.");
             System.out.println("Parking fee for " + hours + " hours: $" + parkingFee);
 
+            
             parkedCars.remove(licensePlate);
             String category = carCategoryMap.get(licensePlate); // ???
             carCategoryMap.remove(licensePlate);
             parkedTimeMap.remove(licensePlate);
+            parkingSpaces.put(occupiedSpaces.get(licensePlate), true);
+            occupiedSpaces.remove(licensePlate);
             availableSlots++;
 
             System.out.println("Available slots: " + availableSlots);
@@ -109,7 +116,7 @@ public class ParkingLotManager {
             System.out.println("License Plate: " + licensePlate 
                             + ", Category: " + carCategoryMap.get(licensePlate) 
                             + ", Parked Time: " + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                            + ", Parking Space: " + getCurrentSpace(parkedCars.indexOf(licensePlate)));
+                            + ", Parking Space: " + occupiedSpaces.get(licensePlate));
         }
     }
 
@@ -138,7 +145,7 @@ public class ParkingLotManager {
                 writer.println(licensePlate + "," 
                 + carCategoryMap.get(licensePlate) 
                 + "," + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                + "," + getCurrentSpace(parkedCars.indexOf(licensePlate)));
+                + "," + occupiedSpaces.get(licensePlate));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -161,6 +168,7 @@ public class ParkingLotManager {
                     carCategoryMap.put(licensePlate, category);
                     parkedTimeMap.put(licensePlate, parkedTime);
                     parkingSpaces.put(space, false);
+                    occupiedSpaces.put(licensePlate, space);
                     loadedCars++; // Increment loaded cars counter
                 } else {
                     System.out.println("Invalid data format: " + line);
@@ -188,15 +196,34 @@ public class ParkingLotManager {
         return '0'; // No available space found
     }
 
-    private static char getCurrentSpace(int parkingSpaceTracker) {
-        int count = 0;
+    private static void updateOccupiedSpaces(String licencePlate) {
         for (HashMap.Entry<Character, Boolean> entry : parkingSpaces.entrySet()) {
             char space = entry.getKey();
+            boolean value = entry.getValue();
+
             // Check the value and perform actions accordingly
-            if (parkingSpaceTracker == count) {
-                return space;
+            if (value) {
+                occupiedSpaces.put(licencePlate, space); // make space as unavailable
             }
-            count++;
+            else{
+                occupiedSpaces.put(licencePlate, '_');
+            }
+        }
+    }
+
+    private static char readCurrentSpace(String licensePlate) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILENAME))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length == 4 && parts[1] == licensePlate) {
+                    String spaceStr = parts[3];
+                   return spaceStr.charAt(0);
+                }
+            }
+        }catch (IOException e) {
+            System.err.println("Error loading current space: " + e.getMessage());
+            e.printStackTrace();
         }
         return '0'; // No available space found
     }
