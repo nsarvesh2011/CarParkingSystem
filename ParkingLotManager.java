@@ -13,20 +13,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ParkingLotManager {
-    private static int totalSlots = 10;
-    private static int availableSlots = totalSlots;
+    private static final int TOTAL_SLOTS = 10;
+    private static int availableSlots = TOTAL_SLOTS;
     private static ArrayList<String> parkedCars = new ArrayList<>();
     private static HashMap<String, String> carCategoryMap = new HashMap<>();
     private static HashMap<String, LocalDateTime> parkedTimeMap = new HashMap<>();
     static final String FILENAME = "parked_cars.txt";
 
-    private static HashMap<Character, Boolean> parkingSpaces = new HashMap<>();
-    private static HashMap<String, Character> occupiedSpaces = new HashMap<>();
+    private static HashMap<Character, ParkingSpace> parkingSpaces = new HashMap<>();
+    //private static HashMap<String, Character> occupiedSpaces = new HashMap<>();
 
     static {
         // Initialize parking spaces as available
-        for (char space = 'A'; space <= 'J'; space++) {
-            parkingSpaces.put(space, true);
+        int limit = TOTAL_SLOTS;
+        for (char space = 'A'; limit > 0; space++, limit--) {
+            parkingSpaces.put(space, new ParkingSpace(space, true, null));
         }
     }
 
@@ -63,8 +64,9 @@ public class ParkingLotManager {
         }
 
         parkedCars.add(licensePlate);
-        char parkSpace = getFirstAvailableSpace();
-        occupiedSpaces.put(licensePlate, parkSpace);
+        ParkingSpace parkSpace = ParkingSpace.getFirstAvailableSpace(parkingSpaces);
+        parkSpace.reserve(licensePlate);
+        //occupiedSpaces.put(licensePlate, parkSpace);
         carCategoryMap.put(licensePlate, category);
         parkedTimeMap.put(licensePlate, LocalDateTime.now());
         availableSlots--;
@@ -73,7 +75,7 @@ public class ParkingLotManager {
     }
 
     public static void removeCar() {
-        if (availableSlots == totalSlots) {
+        if (availableSlots == TOTAL_SLOTS) {
             System.out.println("There are no parked cars.");
             return;
         }
@@ -95,11 +97,13 @@ public class ParkingLotManager {
 
             
             parkedCars.remove(licensePlate);
-            String category = carCategoryMap.get(licensePlate); // ???
+            //String category = carCategoryMap.get(licensePlate); // ???
             carCategoryMap.remove(licensePlate);
             parkedTimeMap.remove(licensePlate);
-            parkingSpaces.put(occupiedSpaces.get(licensePlate), true);
-            occupiedSpaces.remove(licensePlate);
+            ParkingSpace space = findParkingSpaceByLicensePlate(licensePlate);
+            space.freeUp();
+            //parkingSpaces.put(occupiedSpaces.get(licensePlate), true);
+            //occupiedSpaces.remove(licensePlate);
             availableSlots++;
 
             System.out.println("Available slots: " + availableSlots);
@@ -109,7 +113,7 @@ public class ParkingLotManager {
     }
 
     public static void viewParkedCars() {
-        if (availableSlots == totalSlots) {
+        if (availableSlots == TOTAL_SLOTS) {
             System.out.println("There are no parked cars.");
             return;
         }
@@ -119,7 +123,7 @@ public class ParkingLotManager {
             System.out.println("License Plate: " + licensePlate 
                             + ", Category: " + carCategoryMap.get(licensePlate) 
                             + ", Parked Time: " + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                            + ", Parking Space: " + occupiedSpaces.get(licensePlate));
+                            + ", Parking Space: " + findParkingSpaceByLicensePlate(licensePlate).getParkingId());
         }
     }
 
@@ -129,7 +133,7 @@ public class ParkingLotManager {
 
     public static void generateReport() {
         System.out.println("***** Parking Entries Report *****");
-        System.out.println("Total Parking Slots: " + totalSlots);
+        System.out.println("Total Parking Slots: " + TOTAL_SLOTS);
         System.out.println("Available Parking Slots: " + availableSlots);
         System.out.println("---------- Parked Cars ----------");
         if (parkedCars.isEmpty()) {
@@ -139,7 +143,7 @@ public class ParkingLotManager {
                 System.out.println("License Plate: " + licensePlate 
                 + ", Category: " + carCategoryMap.get(licensePlate) 
                 + ", Parked Time: " + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                + ", Parked Space: " + occupiedSpaces.get(licensePlate));
+                + ", Parked Space: " + findParkingSpaceByLicensePlate(licensePlate).getParkingId());
             }
         }
         System.out.println("*********************************");
@@ -151,7 +155,7 @@ public class ParkingLotManager {
                 writer.println(licensePlate + "," 
                 + carCategoryMap.get(licensePlate) 
                 + "," + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                + "," + occupiedSpaces.get(licensePlate));
+                + "," + findParkingSpaceByLicensePlate(licensePlate).getParkingId());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -173,33 +177,19 @@ public class ParkingLotManager {
                     parkedCars.add(licensePlate);
                     carCategoryMap.put(licensePlate, category);
                     parkedTimeMap.put(licensePlate, parkedTime);
-                    parkingSpaces.put(space, false);
-                    occupiedSpaces.put(licensePlate, space);
+                    parkingSpaces.put(space, new ParkingSpace(space, false, licensePlate));
+                    //occupiedSpaces.put(licensePlate, space);
                     loadedCars++; // Increment loaded cars counter
                 } else {
                     System.out.println("Invalid data format: " + line);
                 }
             }
             // Update availableSlots based on loaded cars
-            availableSlots = totalSlots - loadedCars;
+            availableSlots = TOTAL_SLOTS - loadedCars;
         } catch (IOException e) {
             System.err.println("Error loading parked cars: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-    private static char getFirstAvailableSpace() {
-        for (HashMap.Entry<Character, Boolean> entry : parkingSpaces.entrySet()) {
-            char space = entry.getKey();
-            boolean value = entry.getValue();
-
-            // Check the value and perform actions accordingly
-            if (value) {
-                System.out.println("Space: " + space + " is now " + !value);
-                parkingSpaces.put(space, false); // make space as unavailable
-                return space;
-            }
-        }
-        return '0'; // No available space found
     }
 
     public static void reserveParking(){
@@ -233,6 +223,32 @@ public class ParkingLotManager {
                 break;
         }
 
+        showAvailableSpaces();
+
+        System.out.println("\nEnter which space you would like to reserve:");
+        char spaceId = sc.next().toUpperCase().charAt(0); // Convert to uppercase and get the first character
+        // Check if the entered spaceId is valid (i.e., exists in the parkingSpaces HashMap)
+        if (parkingSpaces.containsKey(spaceId)) {
+            ParkingSpace parkingSpace = parkingSpaces.get(spaceId);
+
+            // Check if the parking space is available
+            if (parkingSpace.isAvailable()) {
+                // The space is available, you can proceed with the reservation
+                System.out.println("OK. Reserving space " + spaceId + " for license " + licensePlate);
+            } 
+            else {
+                // The space is not available, print a message indicating that it's already occupied
+                System.out.println("Space " + spaceId + " is already occupied.");
+                return;
+            }
+        } 
+        else {
+            // The entered spaceId is not valid (i.e., it does not exist in the parkingSpaces HashMap)
+            System.out.println("Invalid space ID. Please enter a valid space ID.");
+            return;
+        }
+
+        setParkingSpace(spaceId, licensePlate);
         acceptDateEntry(licensePlate);
         long hoursReserved = acceptDuration();
         double parkingFee = hoursReserved * 5.0; // $5 per hour
@@ -240,10 +256,7 @@ public class ParkingLotManager {
         System.out.println("Parking fee for " + hoursReserved + " hours: $" + parkingFee);
 
         parkedCars.add(licensePlate);
-        char parkSpace = getFirstAvailableSpace();
-        occupiedSpaces.put(licensePlate, parkSpace);
         carCategoryMap.put(licensePlate, category);
-        //parkedTimeMap.put(licensePlate, LocalDateTime.now());
         availableSlots--;
 
         System.out.println("Parking reserved successfully. Available slots: " + availableSlots);
@@ -300,5 +313,30 @@ public class ParkingLotManager {
         }
         return hoursReserved;
     }
+
+    public static ParkingSpace findParkingSpaceByLicensePlate(String licensePlate) {
+        for (ParkingSpace space : parkingSpaces.values()) {
+            if (space.getReservedBy() != null && space.getReservedBy().equals(licensePlate)) {
+                return space; // Found the parking space
+            }
+        }
+        return null; // License plate not found in any parking space
+    }
     
+    private static void showAvailableSpaces(){
+        System.out.println("Available spaces: ");
+        for (ParkingSpace space : parkingSpaces.values()) {
+            if (space.isAvailable()) {
+                System.out.print(space.getParkingId() + ", ");
+            }
+        }
+    }
+
+    public static void setParkingSpace(Character parkingId, String licensePlate){
+        for (ParkingSpace space : parkingSpaces.values()) {
+            if (space.getParkingId() == parkingId) {
+                space.reserve(licensePlate);
+            }
+        }
+    }
 }
