@@ -3,7 +3,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -27,7 +26,7 @@ public class ParkingLotManager {
         // Initialize parking spaces as available
         int limit = TOTAL_SLOTS;
         for (char space = 'A'; limit > 0; space++, limit--) {
-            parkingSpaces.put(space, new ParkingSpace(space, true, null));
+            parkingSpaces.put(space, new ParkingSpace(space, true, null, "On-Spot"));
         }
     }
 
@@ -66,6 +65,7 @@ public class ParkingLotManager {
         parkedCars.add(licensePlate);
         ParkingSpace parkSpace = ParkingSpace.getFirstAvailableSpace(parkingSpaces);
         parkSpace.reserve(licensePlate);
+        parkSpace.updateReservationStatus("On-Spot");
         //occupiedSpaces.put(licensePlate, parkSpace);
         carCategoryMap.put(licensePlate, category);
         parkedTimeMap.put(licensePlate, LocalDateTime.now());
@@ -123,7 +123,8 @@ public class ParkingLotManager {
             System.out.println("License Plate: " + licensePlate 
                             + ", Category: " + carCategoryMap.get(licensePlate) 
                             + ", Parked Time: " + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                            + ", Parking Space: " + findParkingSpaceByLicensePlate(licensePlate).getParkingId());
+                            + ", Parking Space: " + findParkingSpaceByLicensePlate(licensePlate).getParkingId()
+                            + ", Mode: " + findParkingSpaceByLicensePlate(licensePlate).getReservedMode());
         }
     }
 
@@ -143,7 +144,8 @@ public class ParkingLotManager {
                 System.out.println("License Plate: " + licensePlate 
                 + ", Category: " + carCategoryMap.get(licensePlate) 
                 + ", Parked Time: " + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                + ", Parked Space: " + findParkingSpaceByLicensePlate(licensePlate).getParkingId());
+                + ", Parked Space: " + findParkingSpaceByLicensePlate(licensePlate).getParkingId()
+                + ", Mode: " + findParkingSpaceByLicensePlate(licensePlate).getReservedMode());
             }
         }
         System.out.println("*********************************");
@@ -155,7 +157,8 @@ public class ParkingLotManager {
                 writer.println(licensePlate + "," 
                 + carCategoryMap.get(licensePlate) 
                 + "," + parkedTimeMap.get(licensePlate).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                + "," + findParkingSpaceByLicensePlate(licensePlate).getParkingId());
+                + "," + findParkingSpaceByLicensePlate(licensePlate).getParkingId()
+                + "," + findParkingSpaceByLicensePlate(licensePlate).getReservedMode());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -168,16 +171,17 @@ public class ParkingLotManager {
             int loadedCars = 0; // Initialize counter for loaded cars
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
-                if (parts.length == 4) {
+                if (parts.length == 5) {
                     String licensePlate = parts[0];
                     String category = parts[1];
                     LocalDateTime parkedTime = LocalDateTime.parse(parts[2], DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                     String spaceStr = parts[3];
                     char space = spaceStr.charAt(0);
+                    String reservationStatus = parts[4];
                     parkedCars.add(licensePlate);
                     carCategoryMap.put(licensePlate, category);
                     parkedTimeMap.put(licensePlate, parkedTime);
-                    parkingSpaces.put(space, new ParkingSpace(space, false, licensePlate));
+                    parkingSpaces.put(space, new ParkingSpace(space, false, licensePlate, reservationStatus));
                     //occupiedSpaces.put(licensePlate, space);
                     loadedCars++; // Increment loaded cars counter
                 } else {
@@ -336,6 +340,7 @@ public class ParkingLotManager {
         for (ParkingSpace space : parkingSpaces.values()) {
             if (space.getParkingId() == parkingId) {
                 space.reserve(licensePlate);
+                space.updateReservationStatus("Reserved");
             }
         }
     }
