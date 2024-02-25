@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.Duration;
@@ -18,6 +19,8 @@ public class ParkingLotManager {
     private static HashMap<String, String> carCategoryMap = new HashMap<>();
     private static HashMap<String, LocalDateTime> parkedTimeMap = new HashMap<>();
     static final String FILENAME = "parked_cars.txt";
+    private static final String REMOVED_CARS_FILENAME = "removed_cars.txt";
+    private static final double PARKING_RATE_PER_HOUR = 5.0;
 
     private static HashMap<Character, ParkingSpace> parkingSpaces = new HashMap<>();
     //private static HashMap<String, Character> occupiedSpaces = new HashMap<>();
@@ -74,6 +77,22 @@ public class ParkingLotManager {
         System.out.println("Car parked successfully. Available slots: " + availableSlots);
     }
 
+    public static void saveRemovedCar(String licensePlate, String category, LocalDateTime entryTime, LocalDateTime exitTime) {
+        Duration duration = Duration.between(entryTime, exitTime);
+        long hoursParked = duration.toHours();
+        double parkingCharges = hoursParked * PARKING_RATE_PER_HOUR;
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(REMOVED_CARS_FILENAME, true))) {
+            String formattedEntryTime = entryTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            String formattedExitTime = exitTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            writer.println(licensePlate + "," + category + "," + formattedEntryTime + "," + formattedExitTime + "," + hoursParked + " hours," + "$" + parkingCharges);
+            System.out.println("Car details saved to removed_cars.txt.");
+        } catch (IOException e) {
+            System.err.println("Error saving removed car details: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     public static void removeCar() {
         if (availableSlots == TOTAL_SLOTS) {
             System.out.println("There are no parked cars.");
@@ -87,6 +106,7 @@ public class ParkingLotManager {
         if (parkedCars.contains(licensePlate)) {
             LocalDateTime entryTime = parkedTimeMap.get(licensePlate);
             LocalDateTime exitTime = LocalDateTime.now();
+            saveRemovedCar(licensePlate, carCategoryMap.get(licensePlate), entryTime, exitTime);
             Duration duration = Duration.between(entryTime, exitTime);
             long hours = duration.toHours();
 
