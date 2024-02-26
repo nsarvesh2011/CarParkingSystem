@@ -1,17 +1,17 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Scanner;
 
 public class Main {
     private static final String CREDENTIALS_FILE = "credentials.txt";
+    private static final String REMOVALS_FILE = "removed_cars.txt";
     private static final HashMap<String, String> credentials = new HashMap<>();
     private static final String ADMIN_USERNAME = "admin";
     private static final String USER_USERNAME = "user";
 
     public static void main(String[] args) {
-        loadCredentials();
+        
+        ParkingLotManager.loadParkedCars();
+        FileIO.loadCredentials(CREDENTIALS_FILE, credentials);
 
         Scanner sc = new Scanner(System.in);
 
@@ -62,22 +62,7 @@ public class Main {
         }
     }
 
-    private static void loadCredentials() {
-        try (BufferedReader reader = new BufferedReader(new FileReader(CREDENTIALS_FILE))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length == 2) {
-                    String username = parts[0].trim();
-                    String password = parts[1].trim();
-                    credentials.put(username, password);
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Error loading credentials: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
+    
 
     private static boolean isValidCredentials(String username, String password) {
         return credentials.containsKey(username) && credentials.get(username).equals(password);
@@ -93,8 +78,9 @@ public class Main {
             System.out.println("3. View parked cars");
             System.out.println("4. Check parking availability");
             System.out.println("5. Generate parking entries report");
-            System.out.println("6. Reserve Parking");
-            System.out.println("7. Logout");
+            System.out.println("6. Generate removed entries report");
+            System.out.println("7. Reserve Parking");
+            System.out.println("8. Logout");
 
             int choice = sc.nextInt();
             sc.nextLine(); // Consume newline character
@@ -116,10 +102,13 @@ public class Main {
                     ParkingLotManager.generateReport();
                     break;
                 case 6:
-                    ParkingLotManager.reserveParking();
+                    FileIO.generateRemovedReport(REMOVALS_FILE);
                     break;
                 case 7:
-                ParkingLotManager.saveParkedCars();
+                    ParkingLotManager.reserveParking();
+                    break;
+                case 8:
+                    ParkingLotManager.saveParkedCars();
                     exit = true;
                     System.out.println("Logging out...");
                     break;
@@ -157,8 +146,7 @@ public class Main {
                 case 4:
                     ParkingLotManager.reserveParking();
                     break;
-                case 7:
-                ParkingLotManager.saveParkedCars();
+                case 5:
                     exit = true;
                     System.out.println("Logging out...");
                     break;
